@@ -24,7 +24,7 @@ CIFAR-10
    ▼
 Training Job ──► checkpoint PVC ──► Model Serving
       │                                  │
-      └── data PVC                        ├── /health
+      └── data PVC                       ├── /health
                                          └── /predict
                                               │
                                               ▼
@@ -49,14 +49,14 @@ The default checkpoint is written to `./checkpoints/classifier_v1.pt`.
 
 ```bash
 docker build -f docker/Dockerfile.train -t mlops-train:v1 .
-docker run --rm \\
-  -v "$(pwd)/data:/app/data" \\
-  -v "$(pwd)/checkpoints:/app/checkpoints" \\
+docker run --rm \
+  -v "$(pwd)/data:/app/data" \
+  -v "$(pwd)/checkpoints:/app/checkpoints" \
   mlops-train:v1
 
 docker build -f docker/Dockerfile.serve -t mlops-serve:v1 .
-docker run --rm -p 8080:8080 \\
-  -v "$(pwd)/checkpoints:/app/checkpoints" \\
+docker run --rm -p 8080:8080 \
+  -v "$(pwd)/checkpoints:/app/checkpoints" \
   mlops-serve:v1
 ```
 

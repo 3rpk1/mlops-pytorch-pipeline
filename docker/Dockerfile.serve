@@ -1,14 +1,22 @@
 FROM python:3.11-slim AS base
+
 WORKDIR /app
+
 COPY requirements/serve.txt .
 RUN pip install --no-cache-dir -r serve.txt
 
 FROM base AS serving
+
 COPY src/ ./src/
+
 ENV PYTHONUNBUFFERED=1
 ENV MODEL_PATH=/app/checkpoints/classifier_v1.pt
+
 RUN useradd --create-home appuser
 USER appuser
+
 EXPOSE 8080
+
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=3)"
+
 CMD ["python", "-m", "flask", "--app", "src.serve", "run", "--host=0.0.0.0", "--port=8080"]
