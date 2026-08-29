@@ -29,4 +29,4 @@ jobs:
         run: ruff check src tests
 
       - name: Run tests
-        run: pytest tests/ -v
+        run: python -m pytest tests/ -v
