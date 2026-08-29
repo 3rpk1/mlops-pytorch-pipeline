@@ -1,9 +1,9 @@
 import argparse
 import json
 from pathlib import Path
-import yaml
 
 import torch
+import yaml
 from torch import nn
 
 from dataset import get_dataloaders
