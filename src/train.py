@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 import torch
-import torch.nn as nn
+from torch import nn
 import yaml
 
 from dataset import get_dataloaders
