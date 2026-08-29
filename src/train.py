@@ -1,10 +1,10 @@
 import argparse
 import json
 from pathlib import Path
+import yaml
 
 import torch
 from torch import nn
-import yaml
 
 from dataset import get_dataloaders
 from model import get_model

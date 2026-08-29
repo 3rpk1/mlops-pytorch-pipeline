@@ -5,7 +5,7 @@ from flask import Flask, jsonify, request
 from PIL import Image
 from torchvision import transforms
 
-from model import get_model
+from src.model import get_model
 
 app = Flask(__name__)
 MODEL_PATH = os.getenv("MODEL_PATH", "/app/checkpoints/classifier_v1.pt")
