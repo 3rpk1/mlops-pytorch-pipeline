@@ -1,3 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ml-training-storage
+  namespace: ml-training
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -15,24 +27,24 @@ spec:
           resources:
             requests:
               cpu: "2"
-              memory: 4Gi
+              memory: "4Gi"
             limits:
               cpu: "2"
-              memory: 4Gi
+              memory: "4Gi"
           volumeMounts:
-            - name: config
+            - name: training-config
               mountPath: /app/configs
-            - name: data
+              readOnly: true
+            - name: storage
               mountPath: /app/data
-            - name: checkpoints
+              subPath: data
+            - name: storage
               mountPath: /app/checkpoints
+              subPath: checkpoints
       volumes:
-        - name: config
+        - name: training-config
           configMap:
             name: training-config
-        - name: data
+        - name: storage
           persistentVolumeClaim:
-            claimName: data-pvc
-        - name: checkpoints
-          persistentVolumeClaim:
-            claimName: checkpoint-pvc
+            claimName: ml-training-storage
