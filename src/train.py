@@ -6,8 +6,8 @@ import torch
 import yaml
 from torch import nn
 
-from dataset import get_dataloaders
-from model import get_model
+from src.dataset import get_dataloaders
+from src.model import get_model
 
 
 def load_config(path):
