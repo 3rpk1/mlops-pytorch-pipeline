@@ -6,11 +6,17 @@ A small PyTorch image-classification project using CIFAR-10, Docker, and Kuberne
 
 ```text
 mlops-pytorch-pipeline/
-├── .github/workflows/
+├── .github/workflows/ci.yml
 ├── configs/training_config.yaml
 ├── docker/Dockerfile.train
 ├── docker/Dockerfile.serve
 ├── k8s/
+│   ├── namespace.yaml
+│   ├── configmap.yaml
+│   ├── training-job.yaml
+│   ├── serving-deployment.yaml
+│   ├── serving-service.yaml
+│   └── hpa.yaml
 ├── requirements/
 ├── src/
 └── tests/
@@ -22,16 +28,16 @@ mlops-pytorch-pipeline/
 CIFAR-10
    │
    ▼
-Training Job ──► checkpoint PVC ──► Model Serving
-      │                                  │
-      └── data PVC                       ├── /health
-                                         └── /predict
-                                              │
-                                              ▼
-                                           Service
-                                              │
-                                              ▼
-                                             HPA
+Training Job ──► Persistent Storage ──► Model Serving
+                                      │
+                                      ├── /health
+                                      └── /predict
+                                            │
+                                            ▼
+                                         Service
+                                            │
+                                            ▼
+                                           HPA
 ```
 
 ## Local
@@ -40,15 +46,14 @@ Training Job ──► checkpoint PVC ──► Model Serving
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements/train.txt
-python src/train.py
+pytest tests/ -v
 ```
-
-The default checkpoint is written to `./checkpoints/classifier_v1.pt`.
 
 ## Docker
 
 ```bash
 docker build -f docker/Dockerfile.train -t mlops-train:v1 .
+mkdir -p data checkpoints
 docker run --rm \
   -v "$(pwd)/data:/app/data" \
   -v "$(pwd)/checkpoints:/app/checkpoints" \
@@ -60,7 +65,7 @@ docker run --rm -p 8080:8080 \
   mlops-serve:v1
 ```
 
-Then test the service:
+Test serving:
 
 ```bash
 curl http://localhost:8080/health
@@ -69,18 +74,12 @@ curl -X POST http://localhost:8080/predict -F "image=@test_image.png"
 
 ## Kubernetes
 
-Build the images first. For Minikube:
+This project uses the Kubernetes cluster provided by Docker Desktop.
 
-```bash
-minikube image load mlops-train:v1
-minikube image load mlops-serve:v1
-```
-
-Apply the resources:
+Apply the training resources:
 
 ```bash
 kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/storage.yaml
 kubectl apply -f k8s/configmap.yaml
 kubectl apply -f k8s/training-job.yaml
 ```
@@ -91,15 +90,30 @@ After training completes:
 kubectl apply -f k8s/serving-deployment.yaml
 kubectl apply -f k8s/serving-service.yaml
 kubectl apply -f k8s/hpa.yaml
-kubectl get pods -n ml-training
+```
+
+Verify:
+
+```bash
+kubectl get jobs,pods,svc,hpa -n ml-training
 kubectl describe deployment model-serving -n ml-training
 ```
 
-For local prediction testing:
+Test locally:
 
 ```bash
 kubectl port-forward svc/model-serving 8080:80 -n ml-training
+curl http://localhost:8080/health
 curl -X POST http://localhost:8080/predict -F "image=@test_image.png"
+```
+
+## CI
+
+GitHub Actions runs linting and tests for pushes to `main` and `develop` and for pull requests targeting those branches.
+
+```bash
+ruff check src tests
+python -m pytest tests/ -v
 ```
 
 ## Git workflow
@@ -110,3 +124,5 @@ cd mlops-pytorch-pipeline
 git checkout -b develop
 git checkout -b feature/<name>
 ```
+
+Feature branches are merged into `develop` through pull requests. After the feature branches are merged and validated, `develop` is merged into `main`.
