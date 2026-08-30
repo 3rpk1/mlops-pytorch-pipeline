@@ -10,7 +10,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -21,10 +22,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements/train.txt
+          pip install -r requirements/serve.txt
           pip install pytest ruff
 
       - name: Lint
         run: ruff check src tests
 
       - name: Run tests
-        run: pytest tests/ -v
+        run: python -m pytest tests/ -v
