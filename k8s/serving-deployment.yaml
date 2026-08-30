@@ -19,35 +19,37 @@ spec:
         app: model-serving
     spec:
       containers:
-        - name: serving
+        - name: model-serving
           image: mlops-serve:v1
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
           resources:
             requests:
-              cpu: 500m
-              memory: 1Gi
+              cpu: "500m"
+              memory: "1Gi"
             limits:
               cpu: "1"
-              memory: 2Gi
+              memory: "2Gi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 5
           livenessProbe:
             httpGet:
               path: /health
               port: 8080
             periodSeconds: 10
             failureThreshold: 3
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8080
-            periodSeconds: 5
-            initialDelaySeconds: 15
           volumeMounts:
             - name: checkpoints
               mountPath: /app/checkpoints
+              subPath: checkpoints
               readOnly: true
       volumes:
         - name: checkpoints
           persistentVolumeClaim:
-            claimName: checkpoint-pvc
+            claimName: ml-training-storage
+            readOnly: true
